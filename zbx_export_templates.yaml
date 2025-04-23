@@ -1,0 +1,209 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 215abbab93df48cab8aea43b5c915f2d
+      name: 'Security Cameras - AllCamers'
+  templates:
+    - uuid: 3176d890af27425bbc37026058f6989b
+      template: RTSP_Check_Trassir
+      name: RTSP_Check_Trassir
+      templates:
+        - name: 'ICMP Ping'
+      groups:
+        - name: 'Security Cameras - AllCamers'
+      items:
+        - uuid: 9a0347095dc341fea12c7301a48fb8ef
+          name: 'RTSP JSON Raw'
+          type: EXTERNAL
+          key: 'check_rtsp.py[{$CAMERA_LOGIN},{$CAMERA_PWD},{HOST.CONN},{$CAMERA_PORT},{$CAMERA_PATH}]'
+          delay: 60s
+          history: 7d
+          value_type: TEXT
+          trends: '0'
+        - uuid: 531f0f7e20c74503a84ae029de4ba88f
+          name: 'RTSP Brightness'
+          type: DEPENDENT
+          key: rtsp.avg_brightness
+          delay: '0'
+          trends: 93d
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.avg_brightness
+          master_item:
+            key: 'check_rtsp.py[{$CAMERA_LOGIN},{$CAMERA_PWD},{HOST.CONN},{$CAMERA_PORT},{$CAMERA_PATH}]'
+          triggers:
+            - uuid: 6b2fc4f352244195aa1ef7c49fdb08ae
+              expression: last(/RTSP_Check_Trassir/rtsp.avg_brightness)<5
+              name: 'Чёрный экран (яркость < 5)'
+              priority: WARNING
+              manual_close: 'YES'
+        - uuid: 9b71a2209e944fc5a9990bde0b0ed5c1
+          name: 'RTSP Frame Size (KB)'
+          type: DEPENDENT
+          key: rtsp.avg_frame_size_kb
+          delay: '0'
+          history: 93d
+          trends: 93d
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.avg_frame_size_kb
+          master_item:
+            key: 'check_rtsp.py[{$CAMERA_LOGIN},{$CAMERA_PWD},{HOST.CONN},{$CAMERA_PORT},{$CAMERA_PATH}]'
+        - uuid: c31b239ea6484c5cbe50e8136f27a7c3
+          name: 'RTSP Frame Count'
+          type: DEPENDENT
+          key: rtsp.frames_read
+          delay: '0'
+          trends: 93d
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.frames_read
+          master_item:
+            key: 'check_rtsp.py[{$CAMERA_LOGIN},{$CAMERA_PWD},{HOST.CONN},{$CAMERA_PORT},{$CAMERA_PATH}]'
+        - uuid: 4eef0798c3aa4f398df61502e57bad05
+          name: 'RTSP Motion Level'
+          type: DEPENDENT
+          key: rtsp.frame_change_level
+          delay: '0'
+          history: 93d
+          trends: 93d
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.frame_change_level
+          master_item:
+            key: 'check_rtsp.py[{$CAMERA_LOGIN},{$CAMERA_PWD},{HOST.CONN},{$CAMERA_PORT},{$CAMERA_PATH}]'
+          triggers:
+            - uuid: 6126a5e785534ae8a7c8b6b4dea37451
+              expression: last(/RTSP_Check_Trassir/rtsp.frame_change_level)<1
+              name: 'Изображение замёрзло (движение < 1%)'
+              status: DISABLED
+              priority: AVERAGE
+              type: MULTIPLE
+              manual_close: 'YES'
+        - uuid: 8381fdf3d1be472da6ac2241c41e8b9d
+          name: 'RTSP Latency'
+          type: DEPENDENT
+          key: rtsp.latency
+          delay: '0'
+          value_type: FLOAT
+          trends: 93d
+          units: ms
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.latency_ms
+          master_item:
+            key: 'check_rtsp.py[{$CAMERA_LOGIN},{$CAMERA_PWD},{HOST.CONN},{$CAMERA_PORT},{$CAMERA_PATH}]'
+        - uuid: 984e334bf75a43c6bb8f4b576c83a4fd
+          name: 'RTSP Note'
+          type: DEPENDENT
+          key: rtsp.note
+          delay: '0'
+          history: 93d
+          value_type: TEXT
+          trends: '0'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.note
+          master_item:
+            key: 'check_rtsp.py[{$CAMERA_LOGIN},{$CAMERA_PWD},{HOST.CONN},{$CAMERA_PORT},{$CAMERA_PATH}]'
+        - uuid: f43e3ae0e5d0460690e687e83c086226
+          name: 'RTSP FPS'
+          type: DEPENDENT
+          key: rtsp.real_fps
+          delay: '0'
+          trends: 93d
+          units: fps
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.real_fps
+          master_item:
+            key: 'check_rtsp.py[{$CAMERA_LOGIN},{$CAMERA_PWD},{HOST.CONN},{$CAMERA_PORT},{$CAMERA_PATH}]'
+          triggers:
+            - uuid: f04eddd50a8d4e74ad982f8caf14cf5e
+              expression: last(/RTSP_Check_Trassir/rtsp.real_fps)<5
+              name: 'Низкий FPS (< 5 кадров/сек)'
+              priority: AVERAGE
+              type: MULTIPLE
+              manual_close: 'YES'
+        - uuid: 64d3cf42e50e49e9b1c06c963806a6bf
+          name: 'RTSP Resolution'
+          type: DEPENDENT
+          key: rtsp.resolution
+          delay: '0'
+          value_type: TEXT
+          trends: '0'
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - '"width"\s*:\s*(\d+).*?"height"\s*:\s*(\d+)'
+                - \1x\2
+          master_item:
+            key: 'check_rtsp.py[{$CAMERA_LOGIN},{$CAMERA_PWD},{HOST.CONN},{$CAMERA_PORT},{$CAMERA_PATH}]'
+        - uuid: 7868f15c83464221b294908b9534e42c
+          name: 'RTSP Status'
+          type: DEPENDENT
+          key: rtsp.status
+          delay: '0'
+          value_type: TEXT
+          trends: '0'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.status
+          master_item:
+            key: 'check_rtsp.py[{$CAMERA_LOGIN},{$CAMERA_PWD},{HOST.CONN},{$CAMERA_PORT},{$CAMERA_PATH}]'
+          triggers:
+            - uuid: e49d9a9b67d241a49e8a7ec36a6616a1
+              expression: 'last(/RTSP_Check_Trassir/rtsp.status)="no_frames"'
+              name: 'Камера не выдаёт кадры'
+              priority: HIGH
+              type: MULTIPLE
+              manual_close: 'YES'
+            - uuid: c87d9e4039784f5c960684b833aaff1a
+              expression: 'last(/RTSP_Check_Trassir/rtsp.status)="error"'
+              name: 'Камера недоступна'
+              priority: WARNING
+              manual_close: 'YES'
+      macros:
+        - macro: '{$CAMERA_IP}'
+          value: '{HOST.CONN}'
+        - macro: '{$CAMERA_LOGIN}'
+          value: admin
+          description: Логин
+        - macro: '{$CAMERA_PATH}'
+          value: live/main
+          description: 'Ссылка зависит от производителя'
+        - macro: '{$CAMERA_PORT}'
+          value: '554'
+          description: Порт
+        - macro: '{$CAMERA_PWD}'
+          value: admin
+          description: Пароль
+  graphs:
+    - uuid: 71df647f0ec846919a311a16562091bb
+      name: 'Качество видео'
+      graph_items:
+        - color: 199C0D
+          calc_fnc: ALL
+          item:
+            host: RTSP_Check_Trassir
+            key: rtsp.avg_brightness
+        - sortorder: '1'
+          color: F63100
+          calc_fnc: ALL
+          item:
+            host: RTSP_Check_Trassir
+            key: rtsp.real_fps
+        - sortorder: '2'
+          color: 2774A4
+          calc_fnc: ALL
+          item:
+            host: RTSP_Check_Trassir
+            key: rtsp.frame_change_level
