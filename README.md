@@ -40,9 +40,11 @@ pip3 install numpy
 Скопируйте файл в директорию внешних скриптов Zabbix (обычно: `/usr/lib/zabbix/externalscripts/`):
 
 ```bash
+wget https://raw.githubusercontent.com/RoganovDA/zabbix_rtsp/refs/heads/main/check_rtsp.py
 sudo cp check_rtsp.py /usr/lib/zabbix/externalscripts/
 sudo chmod +x /usr/lib/zabbix/externalscripts/check_rtsp.py
 sudo chown zabbix:zabbix /usr/lib/zabbix/externalscripts/check_rtsp.py
+sudo chown zabbix:zabbix /var/log/check_rtsp.log
 ```
 
 Убедитесь, что Zabbix имеет права на чтение/выполнение.
@@ -59,7 +61,7 @@ check_rtsp.py <login> <password> <ip> <port> <path>
 
 Пример:
 ```bash
-/usr/lib/zabbix/externalscripts/check_rtsp.py admin secret 192.168.1.100 554 live/stream1
+/usr/lib/zabbix/externalscripts/check_rtsp.py admin secret 192.168.1.100 554 live/maim
 ```
 
 Результат:
